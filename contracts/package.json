@@ -1,0 +1,26 @@
+{
+  "name": "encrypted-auction-contracts",
+  "version": "1.0.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.ts --network fhenixNitrogen",
+    "deploy:zama": "hardhat run scripts/deploy.ts --network zama",
+    "deploy:fhenix": "hardhat run scripts/deploy.ts --network fhenix",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "verify": "hardhat verify --network fhenix"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "hardhat": "^2.19.4",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "chai": "^4.3.10",
+    "@types/chai": "^4.3.11"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
+

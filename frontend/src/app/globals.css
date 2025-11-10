@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 16% 8%;
+    --foreground: 0 0% 96%;
+    --card: 240 16% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 16% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 268 86% 68%;
+    --primary-foreground: 240 20% 12%;
+    --secondary: 240 12% 18%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 10% 20%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 195 100% 65%;
+    --accent-foreground: 240 20% 12%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 12% 18%;
+    --input: 240 12% 20%;
+    --ring: 268 86% 68%;
+    --radius: 0.75rem;
+    --chart-1: 268 86% 68%;
+    --chart-2: 195 100% 65%;
+    --chart-3: 340 82% 60%;
+    --chart-4: 30 100% 60%;
+    --chart-5: 154 70% 60%;
+  }
+
+  .dark {
+    --background: 240 18% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 16% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 16% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 268 86% 68%;
+    --primary-foreground: 240 20% 12%;
+    --secondary: 240 14% 16%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 14% 16%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 195 100% 65%;
+    --accent-foreground: 240 20% 12%;
+    --destructive: 0 65% 42%;
+    --destructive-foreground: 0 0% 96%;
+    --border: 240 12% 16%;
+    --input: 240 12% 18%;
+    --ring: 268 86% 68%;
+    --chart-1: 268 86% 68%;
+    --chart-2: 195 100% 65%;
+    --chart-3: 340 82% 60%;
+    --chart-4: 30 100% 60%;
+    --chart-5: 154 70% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: radial-gradient(120% 120% at 50% 0%, rgba(104, 99, 255, 0.18) 0%, rgba(5, 5, 5, 0) 55%),
+      linear-gradient(180deg, rgba(8, 8, 12, 0.95) 0%, rgba(8, 8, 12, 1) 100%);
+    background-attachment: fixed;
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "encrypted-bidding-marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter ./frontend dev",
+    "build": "pnpm --filter ./contracts build && pnpm --filter ./frontend build",
+    "test": "pnpm --filter ./contracts test",
+    "deploy": "pnpm --filter ./contracts deploy"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "eslint": "^8.57.0"
+  }
+}
+
