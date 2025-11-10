@@ -5,12 +5,74 @@ import { useReadContract, usePublicClient, useWatchContractEvent } from "wagmi";
 import { AUCTION_ABI, AUCTION_ADDRESS } from "@/lib/contracts";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { targetChainId } from "@/lib/network";
+import { formatAddress } from "@/lib/utils";
+
+const STATUS_LABELS = ["Active", "Ended", "Cancelled"] as const;
+
+export type StatusLabel = (typeof STATUS_LABELS)[number];
+
+export interface DashboardActivity {
+  id: string;
+  type: "auction-created" | "bid-submitted" | "auction-ended";
+  timestamp: number;
+  title: string;
+  description: string;
+  auctionId: bigint;
+}
+
+export interface UserBid {
+  auctionId: bigint;
+  auctionName?: string;
+  bidder: string;
+  timestamp: number;
+  revealed: boolean;
+  refunded: boolean;
+  index: number;
+}
+
+export interface UserAuction {
+  auctionId: bigint;
+  itemName: string;
+  itemDescription: string;
+  imageURI: string;
+  seller: string;
+  startTime: bigint;
+  endTime: bigint;
+  status: StatusLabel;
+  winner: string;
+  winningBid: bigint;
+  bidCount: number;
+  hasExpired: boolean;
+  timeRemainingSeconds: number;
+  bids: UserBid[];
+  timeline: DashboardActivity[];
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === "bigint") return Number(value);
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  if (typeof value === "object" && value !== null && "toString" in value) {
+    const parsed = Number((value as any).toString());
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+function getStatusLabel(statusValue: unknown): StatusLabel {
+  const index = toNumber(statusValue);
+  return STATUS_LABELS[index] ?? "Active";
+}
 
 export function useUserAuctions() {
   const { address, chain } = useAccount();
   const publicClient = usePublicClient();
-  const [userAuctions, setUserAuctions] = useState<any[]>([]);
-  const [userBids, setUserBids] = useState<any[]>([]);
+  const [userAuctions, setUserAuctions] = useState<UserAuction[]>([]);
+  const [userBids, setUserBids] = useState<UserBid[]>([]);
+  const [activity, setActivity] = useState<DashboardActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
   const isCorrectNetwork = chain?.id === targetChainId;
@@ -39,6 +101,7 @@ export function useUserAuctions() {
   const resetData = useCallback(() => {
     setUserAuctions([]);
     setUserBids([]);
+    setActivity([]);
   }, []);
 
   const fetchUserData = useCallback(async () => {
@@ -57,12 +120,13 @@ export function useUserAuctions() {
     if (totalAuctionsBigInt === 0n) {
       resetData();
       setIsLoading(false);
+      setActivity([]);
       return;
     }
 
     setIsLoading(true);
-    const auctions: any[] = [];
-    const bids: any[] = [];
+    const auctions: UserAuction[] = [];
+    const bids: UserBid[] = [];
 
     console.log(
       `Fetching user data for ${address}, total auctions: ${totalAuctionsBigInt.toString()}`
@@ -80,9 +144,40 @@ export function useUserAuctions() {
         const seller = auctionData?.seller?.toLowerCase?.();
 
         if (seller && seller === address.toLowerCase()) {
+          const startTimeSeconds = BigInt(auctionData.startTime ?? 0);
+          const endTimeSeconds = BigInt(auctionData.endTime ?? 0);
+          const statusLabel = getStatusLabel(auctionData.status);
+          const nowSeconds = BigInt(Math.floor(Date.now() / 1000));
+          const hasExpired = nowSeconds >= endTimeSeconds || statusLabel !== "Active";
+          const timeRemainingSeconds = hasExpired
+            ? 0
+            : Number(endTimeSeconds - nowSeconds < 0n ? 0n : endTimeSeconds - nowSeconds);
+
           auctions.push({
-            ...auctionData,
             auctionId: i,
+            itemName: auctionData.itemName,
+            itemDescription: auctionData.itemDescription,
+            imageURI: auctionData.imageURI,
+            seller: auctionData.seller,
+            startTime: startTimeSeconds,
+            endTime: endTimeSeconds,
+            status: statusLabel,
+            winner: auctionData.winner,
+            winningBid: BigInt(auctionData.winningBid ?? 0),
+            bidCount: 0,
+            hasExpired,
+            timeRemainingSeconds,
+            bids: [],
+            timeline: [
+              {
+                id: `auction-${i.toString()}-created`,
+                type: "auction-created",
+                timestamp: Number(startTimeSeconds),
+                title: auctionData.itemName,
+                description: "Auction created",
+                auctionId: i,
+              },
+            ],
           });
           console.log(`Found user auction #${i}: ${auctionData.itemName}`);
         }
@@ -100,12 +195,48 @@ export function useUserAuctions() {
               (bid: any) => bid?.bidder?.toLowerCase?.() === address.toLowerCase()
             );
 
+            const sanitizedBids = auctionBids.map((bid: any, index: number) => ({
+              auctionId: i,
+              auctionName: auctionData.itemName,
+              bidder: bid.bidder,
+              timestamp: toNumber(bid.timestamp),
+              revealed: Boolean(bid.revealed),
+              refunded: Boolean(bid.refunded),
+              index,
+            }));
+
+            const targetAuctionIndex = auctions.findIndex((a) => a.auctionId === i);
+            if (targetAuctionIndex >= 0) {
+              auctions[targetAuctionIndex] = {
+                ...auctions[targetAuctionIndex],
+                bidCount: sanitizedBids.length,
+                bids: sanitizedBids,
+                timeline: [
+                  ...auctions[targetAuctionIndex].timeline,
+                  ...sanitizedBids.map((bid) => ({
+                    id: `auction-${bid.auctionId.toString()}-bid-${bid.index}`,
+                    type: "bid-submitted" as const,
+                    timestamp: bid.timestamp,
+                    title: auctionData.itemName,
+                    description: `Encrypted bid from ${formatAddress(bid.bidder)}`,
+                    auctionId: bid.auctionId,
+                  })),
+                ],
+              };
+            }
+
             if (userAuctionBids.length > 0) {
               userAuctionBids.forEach((bid: any) => {
                 bids.push({
-                  ...bid,
                   auctionId: i,
                   auctionName: auctionData.itemName,
+                  bidder: bid.bidder,
+                  timestamp: toNumber(bid.timestamp),
+                  revealed: Boolean(bid.revealed),
+                  refunded: Boolean(bid.refunded),
+                  index: sanitizedBids.findIndex(
+                    (entry) => entry.bidder === bid.bidder && entry.timestamp === toNumber(bid.timestamp)
+                  ),
                 });
               });
               console.log(`Found ${userAuctionBids.length} bid(s) for auction #${i}`);
@@ -119,8 +250,46 @@ export function useUserAuctions() {
       }
     }
 
+    const augmentedAuctions = auctions.map((auction) => {
+      const hasWinner = auction.winner && auction.winner !== "0x0000000000000000000000000000000000000000";
+      const timeline = [...auction.timeline];
+
+      if (auction.status !== "Active") {
+        timeline.push({
+          id: `auction-${auction.auctionId.toString()}-ended`,
+          type: "auction-ended",
+          timestamp: Number(auction.endTime),
+          title: auction.itemName,
+          description: hasWinner
+            ? `Auction ended • Winner ${formatAddress(auction.winner)}`
+            : "Auction ended",
+          auctionId: auction.auctionId,
+        });
+      }
+
+      const sortedTimeline = timeline.sort((a, b) => b.timestamp - a.timestamp);
+
+      return {
+        ...auction,
+        timeline: sortedTimeline,
+      };
+    });
+
+    const activityFeed: DashboardActivity[] = [
+      ...augmentedAuctions.flatMap((auction) => auction.timeline),
+      ...bids.map((bid) => ({
+        id: `bid-${bid.auctionId.toString()}-${bid.timestamp}-${bid.bidder}`,
+        type: "bid-submitted" as const,
+        timestamp: bid.timestamp,
+        title: bid.auctionName || `Auction #${bid.auctionId.toString()}`,
+        description: `You placed an encrypted bid (${bid.revealed ? "revealed" : "sealed"})`,
+        auctionId: bid.auctionId,
+      })),
+    ].sort((a, b) => b.timestamp - a.timestamp);
+
+    setActivity(activityFeed);
     console.log(`Found ${auctions.length} auctions and ${bids.length} bids for user`);
-    setUserAuctions(auctions);
+    setUserAuctions(augmentedAuctions);
     setUserBids(bids);
     setIsLoading(false);
     setLastUpdated(Date.now());
@@ -166,6 +335,7 @@ export function useUserAuctions() {
     lastUpdated,
     totalAuctions: totalAuctionsBigInt,
     refetch: fetchUserData,
+    activity,
   };
 }
 

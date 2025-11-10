@@ -119,21 +119,6 @@ export default function Home() {
     [totalAuctions, liveAuctions.length]
   );
 
-  const spotlightCreators = [
-    {
-      handle: "@anodic",
-      description: "Architect of encrypted glitches and luminous decay.",
-    },
-    {
-      handle: "@cipherpunk",
-      description: "Bridging ZK cryptography with immersive lightscapes.",
-    },
-    {
-      handle: "@0xMeridian",
-      description: "Procedural anthropologies revealed at reveal time.",
-    },
-  ];
-
   const formatTimeRemaining = (endTime: bigint) => {
     const endDate = Number(endTime) * 1000;
     if (Number.isNaN(endDate)) return "—";
@@ -367,7 +352,7 @@ export default function Home() {
           </Card>
         </section>
 
-        <section className="mt-24 grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+        <section className="mt-24">
           <Card className="border-white/5 bg-white/5">
             <CardContent className="space-y-6 p-8">
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
@@ -388,20 +373,6 @@ export default function Home() {
                 Read the curation brief
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/5 bg-white/5">
-            <CardContent className="space-y-6 p-8">
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Creator spotlight</p>
-              <div className="space-y-6">
-                {spotlightCreators.map((creator) => (
-                  <div key={creator.handle} className="space-y-2">
-                    <p className="text-sm uppercase tracking-[0.3em] text-primary">{creator.handle}</p>
-                    <p className="text-sm text-muted-foreground">{creator.description}</p>
-                  </div>
-                ))}
-              </div>
             </CardContent>
           </Card>
         </section>

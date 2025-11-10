@@ -66,6 +66,52 @@ pnpm deploy
 
 After deployment, copy the contract address and add it to `frontend/.env.local` as `NEXT_PUBLIC_AUCTION_CONTRACT_ADDRESS`.
 
+### Deploying to Zama Devnet
+
+If you originally deployed on Sepolia, redeploy the same contract on Zama Devnet (each chain is independent):
+
+1. **Install Hardhat (if not already present)**  
+   ```bash
+   pnpm add -D hardhat @nomicfoundation/hardhat-toolbox
+   ```
+   (Reuse your existing Hardhat project if you already have one.)
+
+2. **Add Zama network config** to `contracts/hardhat.config.ts` (or `.js`):  
+   ```js
+   require("@nomicfoundation/hardhat-toolbox");
+
+   module.exports = {
+     solidity: "0.8.20",
+     networks: {
+       sepolia: {
+         url: "https://sepolia.infura.io/v3/<YOUR_INFURA_KEY>",
+         accounts: ["0xYOUR_PRIVATE_KEY"],
+       },
+       zama: {
+         url: "https://devnet.zama.ai",
+         chainId: 8009,
+         accounts: ["0xYOUR_PRIVATE_KEY"],
+       },
+     },
+   };
+   ```
+
+3. **Fund your deployer** with Zama Devnet gas: visit the faucet or community links at [docs.zama.org/fhevm/0.3-2/getting-started/](https://docs.zama.org/fhevm/0.3-2/getting-started/).
+
+4. **Compile the contracts**  
+   ```bash
+   npx hardhat compile
+   ```
+
+5. **Deploy to Zama** using your existing script (example `scripts/deploy.ts` / `.js`):  
+   ```bash
+   npx hardhat run scripts/deploy.js --network zama
+   ```
+
+6. **Verify on the explorer** by searching the transaction hash or contract address at [https://main.explorer.zama.ai](https://main.explorer.zama.ai). If the explorer lags, wait a few minutes before retrying.
+
+7. **Update the frontend** to target Zama: set `NEXT_PUBLIC_RPC_URL=https://devnet.zama.ai`, `NEXT_PUBLIC_CHAIN_ID=8009`, and adjust any hard-coded Sepolia values. If you rely on the Relayer, review the integration guide at [docs.zama.org/protocol/relayer-sdk-guides](https://docs.zama.org/protocol/relayer-sdk-guides). Restart `pnpm dev` after changing env vars.
+
 ### 4. Start Development Server
 
 ```bash
@@ -80,6 +126,16 @@ pnpm dev
 ```
 
 The app will be available at http://localhost:3000
+
+### 5. Verify Deployment on Zama Explorer
+
+After you deploy the contracts and create an auction:
+
+- Confirm MetaMask (or your wallet) is on the correct Zama network (Devnet: `https://devnet.zama.ai`, chain ID `8009`).  
+- Once the auction transaction is mined, open the explorer (for example `https://main.explorer.zama.ai`) and search for the transaction hash or contract address to ensure it is indexed.  
+- If the entry does not appear immediately, wait several minutes; explorer indexing can lag behind on-chain finality.  
+- For detailed network setup guidance, follow Zama’s getting-started documentation [here](https://docs.zama.org/fhevm/0.3-2/getting-started/).  
+- For Relayer integration details (if your app relies on Zama’s FHEVM relayer), consult the SDK overview [here](https://docs.zama.org/protocol/relayer-sdk-guides).  
 
 ## Getting Testnet Tokens
 

@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { formatAddress } from "@/lib/utils";
 import Link from "next/link";
 import { CircleDot, Gavel, Package, Trophy } from "lucide-react";
+import { useMemo } from "react";
+import { SummaryGrid } from "@/components/dashboard/SummaryGrid";
+import { AuctionList } from "@/components/dashboard/AuctionList";
+import { BidList } from "@/components/dashboard/BidList";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { useUserAuctions } from "@/hooks/useUserAuctions";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -22,7 +27,7 @@ export default function DashboardPage() {
     switchToTargetChain,
     chain,
   } = useWallet();
-  const { userAuctions, userBids, isLoading: userDataLoading } = useUserAuctions();
+  const { userAuctions, userBids, activity, isLoading: userDataLoading } = useUserAuctions();
 
   const { data: totalAuctions } = useReadContract({
     address: AUCTION_ADDRESS,
@@ -38,43 +43,60 @@ export default function DashboardPage() {
     (auction: any) => auction.winner?.toLowerCase() === address?.toLowerCase()
   );
 
-  const summaryCards = [
-    {
-      title: "My Auctions",
-      description: "Encrypted sales you launched",
-      value: userAuctions.length,
-      icon: Gavel,
-      cta: (
-        <Button asChild variant="outline" className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10">
-          <Link href="/create-auction">Create new auction</Link>
-        </Button>
-      ),
-    },
-    {
-      title: "My Bids",
-      description: "Encrypted bids you placed",
-      value: userBids.length,
-      icon: Package,
-      cta:
-        userBids.length > 0 ? (
-          <Button asChild variant="outline" className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10" size="sm">
-            <Link href="/auctions">Review bids</Link>
+  const summaryCards = useMemo(
+    () => [
+      {
+        title: "My Auctions",
+        description: "Encrypted sales you launched",
+        value: userAuctions.length.toString().padStart(2, "0"),
+        icon: Gavel,
+        cta: (
+          <Button
+            asChild
+            variant="outline"
+            className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10"
+          >
+            <Link href="/create-auction">Create new auction</Link>
           </Button>
-        ) : null,
-    },
-    {
-      title: "Won Auctions",
-      description: "Auctions where you secured the piece",
-      value: wonAuctions.length,
-      icon: Trophy,
-      cta:
-        wonAuctions.length > 0 ? (
-          <Button asChild variant="outline" className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10" size="sm">
-            <Link href="/auctions">View results</Link>
-          </Button>
-        ) : null,
-    },
-  ];
+        ),
+      },
+      {
+        title: "My Bids",
+        description: "Encrypted bids you placed",
+        value: userBids.length.toString().padStart(2, "0"),
+        icon: Package,
+        cta:
+          userBids.length > 0 ? (
+            <Button
+              asChild
+              variant="outline"
+              className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10"
+              size="sm"
+            >
+              <Link href="/auctions">Review bids</Link>
+            </Button>
+          ) : null,
+      },
+      {
+        title: "Won Auctions",
+        description: "Auctions where you secured the piece",
+        value: wonAuctions.length.toString().padStart(2, "0"),
+        icon: Trophy,
+        cta:
+          wonAuctions.length > 0 ? (
+            <Button
+              asChild
+              variant="outline"
+              className="mt-4 w-full rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10"
+              size="sm"
+            >
+              <Link href="/auctions">View results</Link>
+            </Button>
+          ) : null,
+      },
+    ],
+    [userAuctions.length, userBids.length, wonAuctions.length]
+  );
 
   const renderBody = () => {
     if (!isConnected) {
@@ -122,95 +144,41 @@ export default function DashboardPage() {
     if (userDataLoading) {
       return (
         <Card className="border-white/10 bg-black/40 backdrop-blur">
-          <CardContent className="py-10 text-center text-muted-foreground">Loading your encrypted activity…</CardContent>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Loading your encrypted activity…
+          </CardContent>
         </Card>
       );
     }
 
+    const emptyState = (
+      <Card className="border-white/10 bg-black/40 backdrop-blur">
+        <CardHeader>
+          <CardTitle>No auctions yet</CardTitle>
+          <CardDescription>
+            Launch your first encrypted auction to populate this dashboard. You can manage every transaction from here once live.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            asChild
+            className="rounded-full bg-primary px-6 py-3 text-primary-foreground hover:bg-primary/90"
+          >
+            <Link href="/create-auction">Create your first auction</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+
     return (
       <div className="space-y-10">
-        <div className="grid gap-6 md:grid-cols-3">
-          {summaryCards.map((item) => (
-            <Card key={item.title} className="border-white/10 bg-white/5 backdrop-blur transition hover:border-white/20 hover:bg-white/10">
-              <CardHeader className="space-y-4">
-                <item.icon className="h-6 w-6 text-primary" />
-                <div>
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                </div>
-                <p className="text-3xl font-semibold text-foreground">{item.value}</p>
-              </CardHeader>
-              {item.cta && <CardContent>{item.cta}</CardContent>}
-            </Card>
-          ))}
-        </div>
+        <SummaryGrid items={summaryCards} />
 
-        {userAuctions.length > 0 && (
-          <Card className="border-white/10 bg-white/5 backdrop-blur">
-            <CardHeader>
-              <CardTitle>My encrypted listings</CardTitle>
-              <CardDescription>Track the auctions you’ve launched and jump into reveal workflows.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {userAuctions.map((auction: any) => (
-                <div
-                  key={auction.auctionId?.toString()}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/40 px-5 py-4"
-                >
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-foreground">{auction.itemName}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{auction.itemDescription}</p>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      Auction #{auction.auctionId?.toString()}
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10"
-                  >
-                    <Link href={`/auction/${auction.auctionId}`}>Open auction</Link>
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        {userAuctions.length > 0 ? <AuctionList auctions={userAuctions} /> : emptyState}
 
-        {userBids.length > 0 && (
-          <Card className="border-white/10 bg-white/5 backdrop-blur">
-            <CardHeader>
-              <CardTitle>My encrypted bids</CardTitle>
-              <CardDescription>All sealed bids submitted across the marketplace.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {userBids.map((bid: any, index: number) => (
-                <div
-                  key={`${bid.auctionId}-${index}`}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/40 px-5 py-4"
-                >
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {bid.auctionName || `Auction #${bid.auctionId?.toString()}`}
-                    </h3>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      {bid.revealed ? "Revealed" : "Encrypted"} • {bid.refunded ? "Refunded" : "Locked"}
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-white/20 bg-white/5 text-foreground hover:bg-white/10"
-                  >
-                    <Link href={`/auction/${bid.auctionId}`}>View auction</Link>
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        <BidList bids={userBids} />
+
+        <ActivityFeed activity={activity} />
 
         <Card className="border-white/10 bg-white/5 backdrop-blur">
           <CardHeader>
