@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ClientMonitoring } from "@/components/ClientMonitoring";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           <Providers>
+            <ClientMonitoring />
             {children}
             <Toaster />
           </Providers>

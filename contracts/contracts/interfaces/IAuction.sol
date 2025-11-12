@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import "./IFHEVM.sol";
+import "encrypted-types/EncryptedTypes.sol";
 
 /**
  * @title IAuction
@@ -14,7 +14,9 @@ interface IAuction {
         string itemName;
         string itemDescription;
         string imageURI;
-        IFHEVM.euint32 encryptedReservePrice;
+        euint32 encryptedReservePrice;
+        bytes32 reserveHandle;
+        bytes reserveProof;
         uint256 startTime;
         uint256 endTime;
         AuctionStatus status;
@@ -24,7 +26,9 @@ interface IAuction {
 
     struct Bid {
         address bidder;
-        IFHEVM.euint32 encryptedAmount;
+        euint32 encryptedAmount;
+        bytes32 ciphertextHandle;
+        bytes inputProof;
         uint256 timestamp;
         bool revealed;
         bool refunded;
@@ -64,13 +68,15 @@ interface IAuction {
         string memory itemName,
         string memory itemDescription,
         string memory imageURI,
-        IFHEVM.euint32 encryptedReservePrice,
+        externalEuint32 reserveHandle,
+        bytes calldata reserveInputProof,
         uint256 duration
     ) external returns (uint256);
 
     function submitBid(
         uint256 auctionId,
-        IFHEVM.euint32 encryptedBidAmount
+        externalEuint32 bidHandle,
+        bytes calldata bidInputProof
     ) external payable returns (uint256);
 
     function revealBids(uint256 auctionId, uint256[] memory decryptedAmounts) external;

@@ -9,9 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import { Shield, Unlock } from "lucide-react";
-import { parseEther } from "viem";
-import { fromEncryptedValue } from "@/lib/fhevm-helpers";
-import { getStoredEncryptedValue, getAllEncryptedStorage } from "@/lib/fhevm";
+import { handleTransaction, getErrorMessage } from "@/lib/errorHandler";
+import { trackEvent, Events } from "@/lib/monitoring";
 
 interface BidRevealProps {
   auctionId: bigint;
@@ -19,7 +18,7 @@ interface BidRevealProps {
 
 export function BidReveal({ auctionId }: BidRevealProps) {
   const { revealBids, isPending } = useAuction();
-  const { decrypt, isInitialized } = useFHE();
+  const { publicDecrypt, isInitialized } = useFHE();
   const { bids, isLoading } = useAuctionBids(auctionId);
   const { address } = useAccount();
   const [isRevealing, setIsRevealing] = useState(false);
@@ -36,66 +35,58 @@ export function BidReveal({ auctionId }: BidRevealProps) {
     }
 
     setIsRevealing(true);
-    toast.loading("Decrypting bids...");
+    const toastId = toast.loading("Decrypting bids...");
 
     try {
-      // Decrypt all bids using stored values
-      const decryptedAmounts: bigint[] = [];
-      const storage = getAllEncryptedStorage();
+      const handles = bids.map((bid: any) => bid.ciphertextHandle as `0x${string}`);
       
-      for (const bid of bids) {
-        try {
-          const bidderAddress = (bid as any).bidder?.toLowerCase();
-          const encryptedValue = bid.encryptedAmount as `0x${string}`;
-          
-          // Try to find stored value for this bidder and auction
-          let decrypted: number | null = null;
-          
-          // Check all bidders in storage for this auction
-          for (const storedBidder in storage) {
-            const stored = storage[storedBidder]?.[auctionId.toString()];
-            if (stored && stored.encrypted === encryptedValue) {
-              decrypted = stored.originalValue;
-              break;
-            }
-          }
-          
-          // If not found in storage, try to decrypt (may fail for bids we didn't create)
-          if (decrypted === null) {
-            try {
-              const decryptedValue = await decrypt(encryptedValue);
-              decrypted = fromEncryptedValue(decryptedValue);
-            } catch (err) {
-              // If we can't decrypt, we can't reveal this bid
-              // In a real app, each bidder would reveal their own bid
-              console.warn(`Cannot decrypt bid from ${bidderAddress}:`, err);
-              toast.error(`Cannot decrypt bid from ${bidderAddress}. Each bidder must reveal their own bid.`);
-              setIsRevealing(false);
-              return;
-            }
-          }
-          
-          // Convert to wei (decrypted is already in ETH from storage)
-          decryptedAmounts.push(parseEther(decrypted.toString()));
-        } catch (error) {
-          console.error("Decryption error:", error);
-          toast.error("Failed to decrypt some bids. Each bidder must reveal their own bid.");
-          setIsRevealing(false);
-          return;
+      // Decrypt all bids using relayer
+      const decryptionResult = await publicDecrypt(handles);
+
+      // Convert decrypted values to wei amounts
+      const decryptedAmounts: bigint[] = handles.map((handle, index) => {
+        const clearValue = decryptionResult.clearValues[handle.toLowerCase() as `0x${string}`] ??
+          decryptionResult.clearValues[handle as `0x${string}`];
+
+        if (typeof clearValue !== "bigint" && typeof clearValue !== "number") {
+          throw new Error(`Unexpected clear value type for handle ${handle}: ${typeof clearValue}`);
         }
-      }
 
-      if (decryptedAmounts.length !== bids.length) {
-        toast.error("Could not decrypt all bids. Each bidder must reveal their own bid individually.");
-        setIsRevealing(false);
-        return;
-      }
+        // The encrypted value was multiplied by 100 (toEncryptedValue function)
+        // So we need to divide by 100 to get the original ETH amount
+        // Then convert to wei (multiply by 10^18)
+        const ethAmount = Number(clearValue) / 100;
+        const weiAmount = BigInt(Math.floor(ethAmount * 1e18));
+        
+        console.log(`Bid ${index}: encrypted value=${clearValue}, ETH=${ethAmount}, wei=${weiAmount}`);
+        
+        return weiAmount;
+      });
 
-      toast.loading("Revealing bids on-chain...");
-      await revealBids(auctionId, decryptedAmounts);
-      toast.success("Bids revealed successfully!");
+      toast.loading("Revealing bids on-chain…", { id: toastId });
+      
+      // Use error handler with retry logic
+      await handleTransaction(
+        () => revealBids(auctionId, decryptedAmounts),
+        {
+          maxRetries: 2,
+          retryDelay: 2000,
+          onRetry: (attempt) => {
+            toast.loading(`Retrying reveal (attempt ${attempt}/2)...`, { id: toastId });
+          },
+        }
+      );
+      
+      toast.success("Bids revealed successfully!", { id: toastId });
+      trackEvent(Events.BIDS_REVEALED, { auctionId: auctionId.toString(), bidCount: bids.length });
     } catch (error: any) {
-      toast.error(error.message || "Failed to reveal bids");
+      const errorMessage = getErrorMessage(error);
+      toast.error(errorMessage, { id: toastId });
+      trackEvent(Events.ERROR_OCCURRED, { 
+        error: errorMessage, 
+        context: "bid_reveal",
+        auctionId: auctionId.toString() 
+      });
     } finally {
       setIsRevealing(false);
     }
@@ -141,16 +132,7 @@ export function BidReveal({ auctionId }: BidRevealProps) {
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {bids?.length || 0} bid(s) to reveal. This will decrypt all encrypted bids and determine the winner.
-            {bids?.some((bid: any) => {
-              const bidderAddress = bid.bidder?.toLowerCase();
-              const storage = getAllEncryptedStorage();
-              return !Object.keys(storage).some(b => b.toLowerCase() === bidderAddress && storage[b]?.[auctionId.toString()]);
-            }) && (
-              <span className="block mt-2 text-yellow-600">
-                ⚠️ Some bids cannot be decrypted. Each bidder must reveal their own bid individually.
-              </span>
-            )}
+            {bids?.length || 0} bid(s) to reveal. This will request a relayer decryption for every encrypted handle.
           </p>
           <Button
             onClick={handleReveal}

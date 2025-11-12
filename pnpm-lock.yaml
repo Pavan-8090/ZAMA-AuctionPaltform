@@ -17,9 +17,15 @@ importers:
 
   contracts:
     dependencies:
+      '@fhevm/solidity':
+        specifier: ^0.9.0
+        version: 0.9.0
       dotenv:
         specifier: ^16.3.1
         version: 16.6.1
+      encrypted-types:
+        specifier: ^0.0.4
+        version: 0.0.4
     devDependencies:
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^4.0.0
@@ -69,6 +75,9 @@ importers:
       '@wagmi/core':
         specifier: ^2.5.8
         version: 2.22.1(@tanstack/query-core@5.90.7)(@types/react@18.3.26)(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
+      '@zama-fhe/relayer-sdk':
+        specifier: 0.3.0-5
+        version: 0.3.0-5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       axios:
         specifier: ^1.6.5
         version: 1.13.2
@@ -323,6 +332,10 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
+
+  '@fhevm/solidity@0.9.0':
+    resolution: {integrity: sha512-5vpQ0yWnCxU6KAorRQbVovRGoT7vK+kpyvNUQc7nRhAFZeNblr87JWZ3zSUj9xmehQChZGshzT0tWLkF63GJ+A==}
+    engines: {node: '>=20.0.0'}
 
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
@@ -1881,6 +1894,11 @@ packages:
   '@walletconnect/window-metadata@1.0.1':
     resolution: {integrity: sha512-9koTqyGrM2cqFRW517BPY/iEtUDx2r1+Pwwu5m7sJ7ka79wi3EyqhqcICk/yDmv6jAS1rjKgTKXlEhanYjijcA==}
 
+  '@zama-fhe/relayer-sdk@0.3.0-5':
+    resolution: {integrity: sha512-DIPlN9z5tfSCXqUlhQN2MEv57HmAUHSGV9LPtGs6LWmM7POj6WsMd1hU7Qci4AWPsor7k3IqMfqGGthIvot/DQ==}
+    engines: {node: '>=22'}
+    hasBin: true
+
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
 
@@ -2647,6 +2665,9 @@ packages:
   encode-utf8@1.0.3:
     resolution: {integrity: sha512-ucAnuBEhUK4boH2HjVYG5Q2mQyPorvv0u/ocS+zhdw0S8AlHYY+GOFhP1Gio5z4icpP2ivFSvhtFjQi8+T9ppw==}
 
+  encrypted-types@0.0.4:
+    resolution: {integrity: sha512-f55ccBBUwvqWqr3ymAVOLZ6bzjsSQZlDN0GcKFmzkvTpml4Vm3Y6BCaHhCuW/ctrabTJJ3DFnUsjtFOpokJUaQ==}
+
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
 
@@ -2959,6 +2980,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fetch-retry@6.0.0:
+    resolution: {integrity: sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag==}
 
   fhenixjs@0.1.1:
     resolution: {integrity: sha512-XHGFuDk2gYvgwtFTO6O63hlQcEu00jg938p5QwQiiP+wU9LRuPclrgIe9EYWVt22/dkVhUeLYYSXRwVINifqiQ==}
@@ -3850,6 +3874,12 @@ packages:
   node-tfhe@0.3.2:
     resolution: {integrity: sha512-jnLtP+RcQIYH1I1zn8S8W/Sn97yJEY5GqA1X7RDmtLezV7NpgO47fFgtd+T7xGNhwpz6yGyww1In7BWOU1jiwg==}
 
+  node-tfhe@1.4.0-alpha.3:
+    resolution: {integrity: sha512-oTcWL0OFA6t6BhScmDiGQ3VA8tU8T3EXCzIzpNxQxcuJDgQtiUF5CV6dgJLOrpWck4KCp1Bo/xLhv07uwn3q6Q==}
+
+  node-tkms@0.12.4:
+    resolution: {integrity: sha512-ZK+78E08l51NR8fKnvQggeYdiOFMj9vjvSZe5zvMjXvKH//hzrUic0xUJMkj+LWolQ2JamWEDwmaVxGQ5ZmUYQ==}
+
   nofilter@3.1.0:
     resolution: {integrity: sha512-l2NNj07e9afPnhAhvgVrCD/oy2Ai1yfLpuo3EpiO1jFTsB4sFz6oIfAfSZyQzVpkZQ9xS8ZS5g1jCBgq4Hwo0g==}
     engines: {node: '>=12.19'}
@@ -4553,6 +4583,18 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
 
+  solidity-comments-darwin-arm64@0.1.1:
+    resolution: {integrity: sha512-ze1+YboHm8tRJXCoFEsxtU1gpvQ3rCH55xMtBH6dtyh1/gz4qrKCOUBaAP+IHplbzCacZBn+Pz3UmMDOoGshRw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  solidity-comments-linux-x64-gnu@0.1.1:
+    resolution: {integrity: sha512-oiU4yhh1Q9SeGXQ+/sogfTNoOkU8I8IvlIeotBQziTOonUHrxQk4E63kNiYGPDn5ZbB3BhKFmGHNRNrkufsxcQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
   solidity-coverage@0.8.16:
     resolution: {integrity: sha512-qKqgm8TPpcnCK0HCDLJrjbOA2tQNEJY4dHX/LSSQ9iwYFS973MwjtgYn2Iv3vfCEQJTj5xtm4cuUMzlJsJSMbg==}
     hasBin: true
@@ -4766,6 +4808,9 @@ packages:
   tfhe@0.3.2:
     resolution: {integrity: sha512-2FTGQKYiusf/PCrRpYFyEzTSFGHRSEMrC49O7HNsUZ8XslL94RJ0mQliE1BRLk9jhPrlZD26M2UF/EO1Gb0mRw==}
 
+  tfhe@1.4.0-alpha.3:
+    resolution: {integrity: sha512-xdla7hi2WzLFIdAx2/ihRZ/bKlKcgDDabTJGtoqp1E5oqhLM1PzTXsJE0p7tW8+ebrvxiMGfbgMAWnU3f2ZAIQ==}
+
   then-request@6.0.2:
     resolution: {integrity: sha512-3ZBiG7JvP3wbDzA9iNY5zJQcHL4jn/0BWtXIkagfz7QgOL/LqjCEOBQuJNZfu0XYnv5JhKh+cDxCPM4ILrqruA==}
     engines: {node: '>=6.0.0'}
@@ -4783,6 +4828,9 @@ packages:
   tinyglobby@0.2.15:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
+
+  tkms@0.12.4:
+    resolution: {integrity: sha512-IOX63KqSROQgRJApAYCU0Oi0kvgaMwoEEJH5hJuSYxeNMbG8tokNRfWbu2icjP5DzbzMqPdptmD6SbqyibxMvA==}
 
   tmp@0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
@@ -5127,6 +5175,9 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  wasm-feature-detect@1.8.0:
+    resolution: {integrity: sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==}
 
   web3-utils@1.10.4:
     resolution: {integrity: sha512-tsu8FiKJLk2PzhDl9fXbGUWTkkVXYhtTA+SmEFkKft+9BgwLxfCRpU96sWv7ICC8zixBNd3JURVoiR3dUXgP8A==}
@@ -5778,6 +5829,13 @@ snapshots:
       '@ethersproject/strings': 5.8.0
 
   '@fastify/busboy@2.1.1': {}
+
+  '@fhevm/solidity@0.9.0':
+    dependencies:
+      encrypted-types: 0.0.4
+    optionalDependencies:
+      solidity-comments-darwin-arm64: 0.1.1
+      solidity-comments-linux-x64-gnu: 0.1.1
 
   '@floating-ui/core@1.7.3':
     dependencies:
@@ -8325,6 +8383,21 @@ snapshots:
       '@walletconnect/window-getters': 1.0.1
       tslib: 1.14.1
 
+  '@zama-fhe/relayer-sdk@0.3.0-5(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
+    dependencies:
+      commander: 14.0.2
+      ethers: 6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      fetch-retry: 6.0.0
+      keccak: 3.0.4
+      node-tfhe: 1.4.0-alpha.3
+      node-tkms: 0.12.4
+      tfhe: 1.4.0-alpha.3
+      tkms: 0.12.4
+      wasm-feature-detect: 1.8.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   abbrev@1.0.9: {}
 
   abitype@1.0.6(typescript@5.9.3)(zod@3.25.76):
@@ -9084,6 +9157,8 @@ snapshots:
 
   encode-utf8@1.0.3: {}
 
+  encrypted-types@0.0.4: {}
+
   end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
@@ -9631,6 +9706,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
       picomatch: 4.0.3
+
+  fetch-retry@6.0.0: {}
 
   fhenixjs@0.1.1(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
@@ -10621,6 +10698,10 @@ snapshots:
 
   node-tfhe@0.3.2: {}
 
+  node-tfhe@1.4.0-alpha.3: {}
+
+  node-tkms@0.12.4: {}
+
   nofilter@3.1.0: {}
 
   nopt@3.0.6:
@@ -11415,6 +11496,12 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  solidity-comments-darwin-arm64@0.1.1:
+    optional: true
+
+  solidity-comments-linux-x64-gnu@0.1.1:
+    optional: true
+
   solidity-coverage@0.8.16(hardhat@2.27.0(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.7.5)(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@5.0.10)):
     dependencies:
       '@ethersproject/abi': 5.8.0
@@ -11682,6 +11769,8 @@ snapshots:
 
   tfhe@0.3.2: {}
 
+  tfhe@1.4.0-alpha.3: {}
+
   then-request@6.0.2:
     dependencies:
       '@types/concat-stream': 1.6.1
@@ -11712,6 +11801,8 @@ snapshots:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
+
+  tkms@0.12.4: {}
 
   tmp@0.0.33:
     dependencies:
@@ -12106,6 +12197,8 @@ snapshots:
       - utf-8-validate
       - ws
       - zod
+
+  wasm-feature-detect@1.8.0: {}
 
   web3-utils@1.10.4:
     dependencies:

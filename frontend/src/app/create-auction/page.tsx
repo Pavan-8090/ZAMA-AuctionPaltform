@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuction } from "@/hooks/useAuction";
 import { useFHE } from "@/hooks/useFHE";
+import { AUCTION_ADDRESS } from "@/lib/contracts";
 import { useIPFS } from "@/hooks/useIPFS";
 import {
   Card,
@@ -25,16 +26,22 @@ import { Footer } from "@/components/layout/Footer";
 import { getExplorerTxUrl } from "@/lib/network";
 
 export default function CreateAuctionPage() {
-  const { isConnected, isCorrectNetwork, switchToTargetChain, targetChainName, chain } = useWallet();
+  const { address, isConnected, isCorrectNetwork, switchToTargetChain, targetChainName, chain } = useWallet();
   const { createAuction, isPending } = useAuction();
-  const { encrypt, isInitialized } = useFHE();
+  const { encrypt32, isInitialized, isInitializing, initialize, error: fheError } = useFHE();
   const { uploadFile, isUploading } = useIPFS();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
+
+  // Attempt to initialize FHE when wallet is connected
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (isConnected && address && !isInitialized && !isInitializing) {
+      console.log("Wallet connected, attempting FHE initialization...");
+      initialize().catch((err) => {
+        console.error("Failed to initialize FHE:", err);
+      });
+    }
+  }, [isConnected, address, isInitialized, isInitializing, initialize]);
 
 
   const [formData, setFormData] = useState({
@@ -47,6 +54,15 @@ export default function CreateAuctionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    console.log("Form submitted", {
+      isConnected,
+      isCorrectNetwork,
+      address,
+      isInitialized,
+      formData: { ...formData, imageFile: formData.imageFile?.name },
+    });
 
     if (!isConnected) {
       toast.error("Connect your wallet to launch an auction");
@@ -58,8 +74,14 @@ export default function CreateAuctionPage() {
       return;
     }
 
+    if (!address) {
+      toast.error("Connect your wallet to launch an auction");
+      return;
+    }
+
     if (!isInitialized) {
       toast.error("Encryption client is still initializing. Please retry in a moment.");
+      console.warn("FHE not initialized. Current state:", { isInitialized });
       return;
     }
 
@@ -79,21 +101,42 @@ export default function CreateAuctionPage() {
     const toastId = toast.loading("Encrypting reserve and publishing auction…");
 
     try {
+      console.log("Starting auction creation process...");
+      
       let imageURI = "";
       if (formData.imageFile) {
+        console.log("Uploading image to IPFS...");
         imageURI = await uploadFile(formData.imageFile);
+        console.log("Image uploaded:", imageURI);
       }
 
-      const encryptedReservePrice = await encrypt(toEncryptedValue(reservePriceNum));
+      console.log("Encrypting reserve price...", { reservePriceNum, address, AUCTION_ADDRESS });
+      const encryptedValue = toEncryptedValue(reservePriceNum);
+      console.log("Encrypted value (scaled):", encryptedValue);
+      
+      const { handle: reserveHandle, inputProof: reserveInputProof } = await encrypt32(
+        encryptedValue,
+        AUCTION_ADDRESS,
+        address
+      );
+      console.log("Encryption successful:", { reserveHandle, inputProof: reserveInputProof?.slice(0, 20) + "..." });
+      
       const durationSeconds = Math.round(durationDays * 24 * 60 * 60);
+      console.log("Calling createAuction contract function...", {
+        itemName: formData.itemName,
+        durationSeconds,
+      });
 
       const { receipt, hash: txHash } = await createAuction(
         formData.itemName,
         formData.itemDescription,
         imageURI,
-        encryptedReservePrice,
+        reserveHandle,
+        reserveInputProof,
         durationSeconds
       );
+      
+      console.log("Auction created successfully:", { txHash, receipt });
 
       toast.dismiss(toastId);
 
@@ -126,8 +169,15 @@ export default function CreateAuctionPage() {
 
       router.push("/auctions");
     } catch (error: any) {
+      console.error("Error creating auction:", error);
       toast.dismiss(toastId);
-      toast.error(error.message || "Failed to create auction", { position: "bottom-right" });
+      const errorMessage = error?.message || error?.toString() || "Failed to create auction";
+      console.error("Error details:", {
+        message: errorMessage,
+        error,
+        stack: error?.stack,
+      });
+      toast.error(errorMessage, { position: "bottom-right", duration: 5000 });
     } finally {
       setIsSubmitting(false);
     }
@@ -176,16 +226,6 @@ export default function CreateAuctionPage() {
 
     return null;
   };
-
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <div className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-          Loading create auction…
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -327,14 +367,35 @@ export default function CreateAuctionPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-xs text-muted-foreground">
+                <div className={`rounded-xl border px-4 py-3 text-xs ${
+                  isInitialized 
+                    ? "border-green-500/50 bg-green-500/10 text-green-100" 
+                    : isInitializing
+                    ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-100"
+                    : fheError
+                    ? "border-red-500/50 bg-red-500/10 text-red-100"
+                    : "border-white/10 bg-black/30 text-muted-foreground"
+                }`}>
                   <div className="flex items-center gap-2 text-foreground">
-                    <Shield className="h-4 w-4 text-primary" />
-                    Encryption ready
+                    <Shield className={`h-4 w-4 ${
+                      isInitialized ? "text-green-400" : isInitializing ? "text-yellow-400" : fheError ? "text-red-400" : "text-primary"
+                    }`} />
+                    {isInitialized 
+                      ? "Encryption ready" 
+                      : isInitializing
+                      ? "Initializing encryption..."
+                      : fheError
+                      ? "Encryption initialization failed"
+                      : "Encryption not ready"}
                   </div>
                   <p className="mt-1">
-                    We encrypt client-side. Nothing is broadcast until you confirm the transaction in
-                    your wallet.
+                    {isInitialized 
+                      ? "We encrypt client-side. Nothing is broadcast until you confirm the transaction in your wallet."
+                      : isInitializing
+                      ? "Setting up encryption client. This may take a few seconds..."
+                      : fheError
+                      ? fheError.message || "Please check your environment variables and try again."
+                      : "Connect your wallet to initialize encryption."}
                   </p>
                 </div>
 
@@ -342,12 +403,23 @@ export default function CreateAuctionPage() {
                   type="submit"
                   className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={isPending || isUploading || isSubmitting || !isInitialized}
+                  onClick={(e) => {
+                    console.log("Button clicked", {
+                      isPending,
+                      isUploading,
+                      isSubmitting,
+                      isInitialized,
+                      disabled: isPending || isUploading || isSubmitting || !isInitialized,
+                    });
+                  }}
                 >
                   {isPending || isUploading || isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Publishing…
                     </>
+                  ) : !isInitialized ? (
+                    "Initializing encryption..."
                   ) : (
                     "Create auction"
                   )}

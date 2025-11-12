@@ -5,6 +5,8 @@ export interface Auction {
   itemDescription: string;
   imageURI: string;
   encryptedReservePrice: string;
+  reserveHandle: string;
+  reserveProof: string;
   startTime: bigint;
   endTime: bigint;
   status: AuctionStatus;
@@ -15,6 +17,8 @@ export interface Auction {
 export interface Bid {
   bidder: string;
   encryptedAmount: string;
+  ciphertextHandle: string;
+  inputProof: string;
   timestamp: bigint;
   revealed: boolean;
   refunded: boolean;
@@ -30,7 +34,8 @@ export interface CreateAuctionData {
   itemName: string;
   itemDescription: string;
   imageFile: File | null;
-  encryptedReservePrice: string;
+  reserveHandle: string;
+  reserveInputProof: string;
   duration: number; // in seconds
 }
 

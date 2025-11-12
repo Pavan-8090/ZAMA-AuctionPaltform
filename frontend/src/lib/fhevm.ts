@@ -1,3 +1,5 @@
+// Deprecated: the legacy mock FHEVM helpers have been replaced by Zama's relayer integration.
+// This stub is intentionally empty to prevent accidental imports.
 import { BrowserProvider } from "ethers";
 
 let client: any = null;

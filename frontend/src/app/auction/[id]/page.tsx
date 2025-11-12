@@ -40,7 +40,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useWallet } from "@/hooks/useWallet";
 import { targetChainId } from "@/lib/network";
-import { getStoredEncryptedValue } from "@/lib/fhevm";
+import { handleTransaction, getErrorMessage } from "@/lib/errorHandler";
+import { trackEvent, Events } from "@/lib/monitoring";
 
 export default function AuctionDetailPage() {
   const params = useParams();
@@ -48,7 +49,7 @@ export default function AuctionDetailPage() {
   const { address, isConnected, isCorrectNetwork, switchToTargetChain, chain, targetChainName } =
     useWallet();
   const { submitBid, isPending } = useAuction();
-  const { encrypt, isInitialized } = useFHE();
+  const { encrypt32, isInitialized } = useFHE();
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,6 +82,11 @@ export default function AuctionDetailPage() {
       return;
     }
 
+    if (!address) {
+      toast.error("Connect your wallet to place a bid");
+      return;
+    }
+
     if (!isInitialized) {
       toast.error("Encryption engine not ready yet. Please wait a moment.");
       return;
@@ -96,12 +102,37 @@ export default function AuctionDetailPage() {
     const toastId = toast.loading("Encrypting and submitting your bid…");
 
     try {
-      const encryptedBid = await encrypt(toEncryptedValue(amount));
-      await submitBid(auctionId, encryptedBid, bidAmount);
+      const { handle: bidHandle, inputProof } = await encrypt32(
+        toEncryptedValue(amount),
+        AUCTION_ADDRESS,
+        address!
+      );
+      
+      await handleTransaction(
+        () => submitBid(auctionId, bidHandle, inputProof, bidAmount),
+        {
+          maxRetries: 2,
+          retryDelay: 2000,
+          onRetry: (attempt) => {
+            toast.loading(`Retrying bid submission (attempt ${attempt}/2)...`, { id: toastId });
+          },
+        }
+      );
+      
       toast.success("Encrypted bid submitted", { id: toastId });
+      trackEvent(Events.BID_SUBMITTED, { 
+        auctionId: auctionId.toString(), 
+        amount: bidAmount 
+      });
       setBidAmount("");
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit bid", { id: toastId });
+      const errorMessage = getErrorMessage(error);
+      toast.error(errorMessage, { id: toastId });
+      trackEvent(Events.ERROR_OCCURRED, { 
+        error: errorMessage, 
+        context: "bid_submission",
+        auctionId: auctionId.toString() 
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -339,12 +370,7 @@ export default function AuctionDetailPage() {
                     {bids.map((bid: any, index: number) => {
                       const bidderAddress = formatAddress(bid.bidder);
                       const isYou = address?.toLowerCase() === bid.bidder.toLowerCase();
-                      const stored = isYou && address
-                        ? getStoredEncryptedValue(address, auctionId.toString())
-                        : null;
-                      const displayValue = stored
-                        ? `${stored.originalValue} ETH`
-                        : formatEncryptedValue(bid.encryptedAmount as string);
+                      const displayValue = formatEncryptedValue(bid.encryptedAmount as string);
 
                       return (
                         <div

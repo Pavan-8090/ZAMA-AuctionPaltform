@@ -1,7 +1,7 @@
 // Deployed contract address
-// Sepolia Testnet: 0x0FE17cAc1D8df16a28B1d0CD7FF05bD2fA606C4b
+// Sepolia Testnet (Zama): 0x1A5A0041BbD5654d3AdA5e969B54407F3C6fe2FC
 // Localhost: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-export const AUCTION_ADDRESS = (process.env.NEXT_PUBLIC_AUCTION_CONTRACT_ADDRESS || "0x0FE17cAc1D8df16a28B1d0CD7FF05bD2fA606C4b") as `0x${string}`;
+export const AUCTION_ADDRESS = (process.env.NEXT_PUBLIC_AUCTION_CONTRACT_ADDRESS || "0x1A5A0041BbD5654d3AdA5e969B54407F3C6fe2FC") as `0x${string}`;
 
 export const AUCTION_ABI = [
   {
@@ -9,7 +9,8 @@ export const AUCTION_ABI = [
       { internalType: "string", name: "itemName", type: "string" },
       { internalType: "string", name: "itemDescription", type: "string" },
       { internalType: "string", name: "imageURI", type: "string" },
-      { internalType: "bytes32", name: "encryptedReservePrice", type: "bytes32" },
+      { internalType: "bytes32", name: "reserveHandle", type: "bytes32" },
+      { internalType: "bytes", name: "reserveInputProof", type: "bytes" },
       { internalType: "uint256", name: "duration", type: "uint256" },
     ],
     name: "createAuction",
@@ -20,11 +21,34 @@ export const AUCTION_ABI = [
   {
     inputs: [
       { internalType: "uint256", name: "auctionId", type: "uint256" },
-      { internalType: "bytes32", name: "encryptedBidAmount", type: "bytes32" },
+      { internalType: "bytes32", name: "bidHandle", type: "bytes32" },
+      { internalType: "bytes", name: "bidInputProof", type: "bytes" },
     ],
     name: "submitBid",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "auctionId", type: "uint256" },
+      { internalType: "uint256", name: "bidIndex", type: "uint256" },
+      { internalType: "uint256", name: "decryptedAmount", type: "uint256" },
+    ],
+    name: "revealBid",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "auctionId", type: "uint256" },
+      { internalType: "uint256[]", name: "bidIndices", type: "uint256[]" },
+      { internalType: "uint256[]", name: "decryptedAmounts", type: "uint256[]" },
+    ],
+    name: "completeReveal",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -63,6 +87,8 @@ export const AUCTION_ABI = [
           { internalType: "string", name: "itemDescription", type: "string" },
           { internalType: "string", name: "imageURI", type: "string" },
           { internalType: "bytes32", name: "encryptedReservePrice", type: "bytes32" },
+          { internalType: "bytes32", name: "reserveHandle", type: "bytes32" },
+          { internalType: "bytes", name: "reserveProof", type: "bytes" },
           { internalType: "uint256", name: "startTime", type: "uint256" },
           { internalType: "uint256", name: "endTime", type: "uint256" },
           { internalType: "uint8", name: "status", type: "uint8" },
@@ -85,6 +111,8 @@ export const AUCTION_ABI = [
         components: [
           { internalType: "address", name: "bidder", type: "address" },
           { internalType: "bytes32", name: "encryptedAmount", type: "bytes32" },
+          { internalType: "bytes32", name: "ciphertextHandle", type: "bytes32" },
+          { internalType: "bytes", name: "inputProof", type: "bytes" },
           { internalType: "uint256", name: "timestamp", type: "uint256" },
           { internalType: "bool", name: "revealed", type: "bool" },
           { internalType: "bool", name: "refunded", type: "bool" },

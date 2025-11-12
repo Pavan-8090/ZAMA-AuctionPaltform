@@ -22,7 +22,9 @@ const targetChainId =
 
 const targetChainName = KNOWN_CHAIN_METADATA[targetChainId]?.name ?? `Chain ${targetChainId}`;
 
-const FHEVM_CHAIN_IDS = [42069, 8009, 9000];
+// FHEVM supported chains: Sepolia (Zama FHEVM), Fhenix, Zama networks
+// Note: Sepolia (11155111) has Zama FHEVM support
+const FHEVM_CHAIN_IDS = [11155111, 42069, 8009, 9000];
 
 const explorerBaseEnv = process.env.NEXT_PUBLIC_BLOCK_EXPLORER?.replace(/\/$/, "");
 const targetChainExplorerBaseUrl =

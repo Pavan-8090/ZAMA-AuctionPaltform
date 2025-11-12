@@ -13,14 +13,15 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^5.0.2",
-    "hardhat": "^2.19.4",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2",
+    "@types/chai": "^4.3.11",
     "chai": "^4.3.10",
-    "@types/chai": "^4.3.11"
+    "hardhat": "^2.19.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "dotenv": "^16.3.1"
+    "@fhevm/solidity": "^0.9.0",
+    "dotenv": "^16.3.1",
+    "encrypted-types": "^0.0.4"
   }
 }
-

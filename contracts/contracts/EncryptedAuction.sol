@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@fhevm/solidity/lib/FHE.sol";
+import "@fhevm/solidity/config/ZamaConfig.sol";
+import "encrypted-types/EncryptedTypes.sol";
 import "./interfaces/IAuction.sol";
-import "./interfaces/IFHEVM.sol";
 
 /**
  * @title EncryptedAuction
- * @notice Smart contract for encrypted bidding marketplace using FHEVM
- * @dev All bid amounts are encrypted using FHE until reveal time
+ * @notice Smart contract for encrypted bidding marketplace using Zama's FHEVM relayer flow.
+ * @dev Bids and reserve prices are supplied as encrypted handles that the contract verifies through
+ *      the FHE precompiles. On-chain logic still relies on a post-auction reveal of clear amounts,
+ *      but all commitments remain encrypted until users decide to decrypt via the relayer.
  */
-contract EncryptedAuction is IAuction, Ownable, ReentrancyGuard, Pausable {
-    // Constructor
-    constructor() Ownable(msg.sender) {}
+contract EncryptedAuction is IAuction, EthereumConfig, Ownable, ReentrancyGuard, Pausable {
+    using FHE for euint32;
 
-    // State variables
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => Bid[]) public bids; // auctionId => bids array
     mapping(uint256 => mapping(address => bool)) public hasBid;
@@ -24,46 +26,34 @@ contract EncryptedAuction is IAuction, Ownable, ReentrancyGuard, Pausable {
     mapping(uint256 => mapping(uint256 => uint256)) public bidPayments; // auctionId => bidIndex => payment amount
     uint256 public auctionCounter;
 
-    // FHEVM precompile addresses (these would be actual addresses on Fhenix)
-    address private constant FHEVM_PRECOMPILE = address(0x0000000000000000000000000000000000000042);
-
-    // Modifiers
     modifier validAuction(uint256 auctionId) {
         require(auctions[auctionId].id != 0, "Auction does not exist");
         _;
     }
 
     modifier auctionActive(uint256 auctionId) {
-        require(
-            auctions[auctionId].status == AuctionStatus.Active,
-            "Auction not active"
-        );
-        require(
-            block.timestamp < auctions[auctionId].endTime,
-            "Auction ended"
-        );
+        require(auctions[auctionId].status == AuctionStatus.Active, "Auction not active");
+        require(block.timestamp < auctions[auctionId].endTime, "Auction ended");
         _;
     }
 
-    /**
-     * @notice Create a new auction with encrypted reserve price
-     * @param itemName Name of the item being auctioned
-     * @param itemDescription Description of the item
-     * @param imageURI IPFS URI of the item image
-     * @param encryptedReservePrice Encrypted minimum bid (FHE euint32)
-     * @param duration Auction duration in seconds
-     * @return auctionId The ID of the created auction
-     */
+    constructor() Ownable(msg.sender) EthereumConfig() {}
+
     function createAuction(
         string memory itemName,
         string memory itemDescription,
         string memory imageURI,
-        IFHEVM.euint32 encryptedReservePrice,
+        externalEuint32 reserveHandle,
+        bytes calldata reserveInputProof,
         uint256 duration
     ) external whenNotPaused returns (uint256) {
         require(bytes(itemName).length > 0, "Item name required");
         require(duration > 0, "Duration must be positive");
         require(duration <= 30 days, "Duration too long");
+
+        euint32 encryptedReserve = FHE.fromExternal(reserveHandle, reserveInputProof);
+        FHE.allow(encryptedReserve, msg.sender);
+        FHE.allowThis(encryptedReserve);
 
         auctionCounter++;
         uint256 auctionId = auctionCounter;
@@ -74,7 +64,9 @@ contract EncryptedAuction is IAuction, Ownable, ReentrancyGuard, Pausable {
             itemName: itemName,
             itemDescription: itemDescription,
             imageURI: imageURI,
-            encryptedReservePrice: encryptedReservePrice,
+            encryptedReservePrice: encryptedReserve,
+            reserveHandle: externalEuint32.unwrap(reserveHandle),
+            reserveProof: reserveInputProof,
             startTime: block.timestamp,
             endTime: block.timestamp + duration,
             status: AuctionStatus.Active,
@@ -86,15 +78,10 @@ contract EncryptedAuction is IAuction, Ownable, ReentrancyGuard, Pausable {
         return auctionId;
     }
 
-    /**
-     * @notice Submit an encrypted bid
-     * @param auctionId The auction ID
-     * @param encryptedBidAmount Encrypted bid amount (FHE euint32)
-     * @return bidId The ID of the submitted bid
-     */
     function submitBid(
         uint256 auctionId,
-        IFHEVM.euint32 encryptedBidAmount
+        externalEuint32 bidHandle,
+        bytes calldata bidInputProof
     )
         external
         payable
@@ -105,25 +92,26 @@ contract EncryptedAuction is IAuction, Ownable, ReentrancyGuard, Pausable {
         returns (uint256)
     {
         require(msg.value > 0, "Bid must include payment");
-        require(
-            msg.sender != auctions[auctionId].seller,
-            "Seller cannot bid"
-        );
+        require(msg.sender != auctions[auctionId].seller, "Seller cannot bid");
+
+        euint32 encryptedBid = FHE.fromExternal(bidHandle, bidInputProof);
+        FHE.allow(encryptedBid, msg.sender);
+        FHE.allowThis(encryptedBid);
 
         uint256 bidId = bids[auctionId].length;
         bids[auctionId].push(
             Bid({
                 bidder: msg.sender,
-                encryptedAmount: encryptedBidAmount,
+                encryptedAmount: encryptedBid,
+                ciphertextHandle: externalEuint32.unwrap(bidHandle),
+                inputProof: bidInputProof,
                 timestamp: block.timestamp,
                 revealed: false,
                 refunded: false
             })
         );
 
-        // Track the payment amount for this bid
         bidPayments[auctionId][bidId] = msg.value;
-
         hasBid[auctionId][msg.sender] = true;
 
         emit BidSubmitted(auctionId, msg.sender, bidId);

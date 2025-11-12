@@ -5,23 +5,23 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 import { parseEther } from "viem";
 import { config } from "@/lib/wagmi";
 import { AUCTION_ABI, AUCTION_ADDRESS } from "@/lib/contracts";
-import { storeEncryptedValue } from "@/lib/fhevm";
 import { targetChainId } from "@/lib/network";
 
 export function useAuction() {
-  const { address, chain } = useAccount();
+  const { chain } = useAccount();
 
   const { writeContractAsync, data: hash, isPending, error, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
-    chainId: targetChainId,
+    chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
   });
 
   const createAuction = async (
     itemName: string,
     itemDescription: string,
     imageURI: string,
-    encryptedReservePrice: string | `0x${string}`,
+    reserveHandle: string | `0x${string}`,
+    reserveInputProof: string | `0x${string}`,
     duration: number | bigint
   ) => {
     try {
@@ -29,8 +29,8 @@ export function useAuction() {
         throw new Error("Wrong network selected. Please switch to the target chain.");
       }
 
-      if (!encryptedReservePrice) {
-        throw new Error("Encrypted reserve price missing");
+      if (!reserveHandle || !reserveInputProof) {
+        throw new Error("Encrypted reserve price payload missing");
       }
 
       const normalizedDuration =
@@ -50,7 +50,8 @@ export function useAuction() {
         itemName,
         itemDescription,
         imageURI,
-        encryptedReservePrice,
+        reserveHandle,
+        reserveInputProof,
         duration: normalizedDuration.toString(),
         contractAddress: AUCTION_ADDRESS,
       });
@@ -60,12 +61,13 @@ export function useAuction() {
           address: AUCTION_ADDRESS,
           abi: AUCTION_ABI,
           functionName: "createAuction",
-          chainId: targetChainId,
+          chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
           args: [
             itemName,
             itemDescription,
             imageURI,
-            encryptedReservePrice as `0x${string}`,
+            reserveHandle as `0x${string}`,
+            reserveInputProof as `0x${string}`,
             normalizedDuration,
           ],
         },
@@ -81,7 +83,7 @@ export function useAuction() {
       console.log("Transaction hash:", hash);
 
       // Wait for transaction receipt
-      const receipt = await waitForTransactionReceipt(config, { hash, chainId: targetChainId });
+      const receipt = await waitForTransactionReceipt(config, { hash, chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000 });
 
       console.log("Transaction receipt:", receipt);
 
@@ -101,23 +103,23 @@ export function useAuction() {
     }
   };
 
-  const submitBid = async (auctionId: bigint, encryptedBidAmount: string, value: string) => {
+  const submitBid = async (
+    auctionId: bigint,
+    bidHandle: string | `0x${string}`,
+    bidInputProof: string | `0x${string}`,
+    value: string
+  ) => {
     try {
       if (chain && chain.id !== targetChainId) {
         throw new Error("Wrong network selected. Please switch to the target chain.");
       }
 
-      // Store the encrypted value with original for later decryption
-      if (address) {
-        storeEncryptedValue(address, auctionId.toString(), encryptedBidAmount, parseFloat(value));
-      }
-      
       const result = await writeContractAsync({
         address: AUCTION_ADDRESS,
         abi: AUCTION_ABI,
         functionName: "submitBid",
-        args: [auctionId, encryptedBidAmount as `0x${string}`],
-        chainId: targetChainId,
+        args: [auctionId, bidHandle as `0x${string}`, bidInputProof as `0x${string}`],
+        chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
         value: parseEther(value),
       });
       return result;
@@ -137,7 +139,7 @@ export function useAuction() {
         address: AUCTION_ADDRESS,
         abi: AUCTION_ABI,
         functionName: "revealBids",
-        chainId: targetChainId,
+        chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
         args: [auctionId, decryptedAmounts],
       });
       return result;
@@ -157,7 +159,7 @@ export function useAuction() {
         address: AUCTION_ADDRESS,
         abi: AUCTION_ABI,
         functionName: "withdrawRefund",
-        chainId: targetChainId,
+        chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
         args: [auctionId],
       });
       return result;
@@ -177,7 +179,7 @@ export function useAuction() {
         address: AUCTION_ADDRESS,
         abi: AUCTION_ABI,
         functionName: "cancelAuction",
-        chainId: targetChainId,
+        chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
         args: [auctionId],
       });
       return result;
@@ -206,7 +208,7 @@ export function useAuctionDetails(auctionId: bigint | null) {
     address: AUCTION_ADDRESS,
     abi: AUCTION_ABI,
     functionName: "getAuctionDetails",
-    chainId: targetChainId,
+    chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
     args: auctionId ? [auctionId] : undefined,
     query: {
       enabled: auctionId !== null,
@@ -225,7 +227,7 @@ export function useAuctionBids(auctionId: bigint | null) {
     address: AUCTION_ADDRESS,
     abi: AUCTION_ABI,
     functionName: "getBids",
-    chainId: targetChainId,
+    chainId: targetChainId as 11155111 | 1337 | 42069 | 8009 | 9000,
     args: auctionId ? [auctionId] : undefined,
     query: {
       enabled: auctionId !== null,

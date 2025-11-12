@@ -24,6 +24,8 @@ export interface UserBid {
   auctionId: bigint;
   auctionName?: string;
   bidder: string;
+  ciphertextHandle: string;
+  inputProof: string;
   timestamp: number;
   revealed: boolean;
   refunded: boolean;
@@ -199,6 +201,8 @@ export function useUserAuctions() {
               auctionId: i,
               auctionName: auctionData.itemName,
               bidder: bid.bidder,
+              ciphertextHandle: bid.ciphertextHandle,
+              inputProof: bid.inputProof,
               timestamp: toNumber(bid.timestamp),
               revealed: Boolean(bid.revealed),
               refunded: Boolean(bid.refunded),
@@ -231,6 +235,8 @@ export function useUserAuctions() {
                   auctionId: i,
                   auctionName: auctionData.itemName,
                   bidder: bid.bidder,
+                  ciphertextHandle: bid.ciphertextHandle,
+                  inputProof: bid.inputProof,
                   timestamp: toNumber(bid.timestamp),
                   revealed: Boolean(bid.revealed),
                   refunded: Boolean(bid.refunded),
@@ -305,7 +311,7 @@ export function useUserAuctions() {
     eventName: "AuctionCreated",
     chainId: targetChainId,
     enabled: Boolean(address) && isCorrectNetwork,
-    listener: () => {
+    onLogs: () => {
       console.log("AuctionCreated event detected – refreshing user data");
       refetchTotalAuctions();
       fetchUserData();
@@ -318,13 +324,15 @@ export function useUserAuctions() {
     eventName: "BidSubmitted",
     chainId: targetChainId,
     enabled: Boolean(address) && isCorrectNetwork,
-    listener: (log) => {
-      const bidder = Array.isArray(log) ? log[0]?.args?.bidder : (log as any)?.args?.bidder;
-      if (!bidder || !address) return;
-      if (bidder.toLowerCase() === address.toLowerCase()) {
-        console.log("BidSubmitted event for user – refreshing bids");
-        fetchUserData();
-      }
+    onLogs: (logs: any[]) => {
+      logs.forEach((log) => {
+        const bidder = log?.args?.bidder;
+        if (!bidder || !address) return;
+        if (bidder.toLowerCase() === address.toLowerCase()) {
+          console.log("BidSubmitted event for user – refreshing bids");
+          fetchUserData();
+        }
+      });
     },
   });
 

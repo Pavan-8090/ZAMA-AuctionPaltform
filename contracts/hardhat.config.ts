@@ -10,7 +10,7 @@ dotenv.config({ path: resolve(__dirname, ".env") });
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.20",
+    version: "0.8.24",
     settings: {
       optimizer: {
         enabled: true,
@@ -28,8 +28,8 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     zama: {
-      url: process.env.NEXT_PUBLIC_RPC_URL || "https://devnet.zama.ai/",
-      chainId: 8009,
+      url: process.env.ZAMA_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "https://eth-sepolia.public.blastapi.io",
+      chainId: 11155111,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     zamaTestnet: {

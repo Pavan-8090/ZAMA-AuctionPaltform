@@ -64,10 +64,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-black text-white antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background-image: radial-gradient(120% 120% at 50% 0%, rgba(104, 99, 255, 0.18) 0%, rgba(5, 5, 5, 0) 55%),
-      linear-gradient(180deg, rgba(8, 8, 12, 0.95) 0%, rgba(8, 8, 12, 1) 100%);
-    background-attachment: fixed;
   }
 }
