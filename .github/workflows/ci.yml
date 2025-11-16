@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install root deps
+        run: yarn install --frozen-lockfile
+      - name: Install contracts deps
+        run: yarn --cwd contracts install --frozen-lockfile
+      - name: Build contracts
+        run: yarn --cwd contracts build
+      - name: Test contracts
+        run: yarn --cwd contracts test
+      - name: Install frontend deps
+        run: yarn --cwd frontend install --frozen-lockfile
+      - name: Lint frontend
+        run: yarn --cwd frontend lint
+      - name: Build frontend
+        env:
+          NEXT_PUBLIC_CHAIN_ID: 31337
+          NEXT_PUBLIC_ROUTER_ADDRESS: 0x0000000000000000000000000000000000000001
+          NEXT_PUBLIC_FHE_MODE: MOCK
+        run: yarn --cwd frontend build
+      - name: Install relayer deps
+        run: yarn --cwd relayer install --frozen-lockfile
+      - name: Build relayer
+        run: yarn --cwd relayer build
+

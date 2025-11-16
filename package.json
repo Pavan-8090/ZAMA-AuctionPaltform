@@ -1,0 +1,22 @@
+{
+  "name": "private-whale-safe-swapper",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "frontend",
+    "relayer"
+  ],
+  "scripts": {
+    "build": "yarn workspaces run build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint",
+    "dev": "cross-env MOCK_FHE=true concurrently -k -n CONTRACTS,FRONTEND,RELAYER -c yellow,cyan,magenta \"yarn --cwd contracts dev\" \"yarn --cwd frontend dev\" \"yarn --cwd relayer dev\"",
+    "deploy:local": "yarn --cwd contracts deploy:local"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "cross-env": "^7.0.3"
+  }
+}
+

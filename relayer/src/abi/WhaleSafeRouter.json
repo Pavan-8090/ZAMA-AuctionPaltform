@@ -1,0 +1,28 @@
+[
+  {
+    "type": "event",
+    "name": "EncryptedOrderSubmitted",
+    "inputs": [
+      { "name": "orderId", "type": "uint256", "indexed": true },
+      { "name": "submitter", "type": "address", "indexed": true },
+      { "name": "tokenIn", "type": "address", "indexed": true },
+      { "name": "tokenOut", "type": "address", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "executeEncryptedSwap",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "orderId", "type": "uint256" },
+      { "name": "fheResultBlob", "type": "bytes" },
+      { "name": "amountIn", "type": "uint256" },
+      { "name": "minAmountOut", "type": "uint256" },
+      { "name": "publicAmountOut", "type": "uint256" },
+      { "name": "publicPrice", "type": "uint256" }
+    ],
+    "outputs": []
+  }
+]
+

@@ -1,0 +1,37 @@
+{
+  "name": "@pws/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "hardhat compile",
+    "clean": "hardhat clean",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "lint": "eslint --ext .ts ./scripts ./test && solhint 'contracts/**/*.sol'",
+    "dev": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "simulate": "hardhat run scripts/simulateEncryptedSwap.ts --network localhost",
+    "verify": "hardhat run scripts/verify.ts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.19",
+    "chai": "^4.3.10",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.57.0",
+    "ethereum-waffle": "^4.0.10",
+    "hardhat": "^2.22.10",
+    "hardhat-gas-reporter": "^1.0.10",
+    "solhint": "^4.5.4",
+    "solidity-coverage": "^0.8.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
+
