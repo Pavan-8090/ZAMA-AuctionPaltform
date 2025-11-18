@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title EncryptedOrderBook
@@ -39,8 +39,7 @@ contract EncryptedOrderBook is Ownable, AccessControl, Pausable {
     event OrderStored(uint256 indexed orderId, address indexed submitter, address indexed tokenIn, address tokenOut);
     event OrderStatusUpdated(uint256 indexed orderId, OrderStatus status);
 
-    constructor(address admin) {
-        _transferOwnership(admin);
+    constructor(address admin) Ownable(admin) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
