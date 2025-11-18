@@ -19,47 +19,42 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { href: "/auctions", label: "Marketplace", icon: Search },
+    { href: "/auctions", label: "Marketplace" },
     ...(mounted && isConnected
       ? [
-          { href: "/create-auction", label: "Create", icon: Plus },
-          { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { href: "/create-auction", label: "Create Auction" },
+          { href: "/dashboard", label: "Dashboard" },
         ]
       : []),
   ];
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10">
-              <span className="text-sm font-semibold uppercase tracking-[0.35em] text-white">EB</span>
-              <span className="absolute inset-0 rounded-full bg-primary/20 blur-lg" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <span className="text-lg font-bold">WS</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-semibold tracking-tight text-white">
-                EncryptedBidSecure
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
-                Encrypted auctions
-              </span>
+              <span className="text-lg font-bold tracking-tight">WhaleSafe</span>
+              <span className="text-[10px] font-medium text-muted-foreground">Encrypted Auctions</span>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-6 md:flex">
             {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 text-xs uppercase tracking-[0.35em] transition-colors ${
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  className={`text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
                   {link.label}
                 </Link>
               );
@@ -71,7 +66,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden text-muted-foreground hover:text-foreground"
+              className="md:hidden"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -80,23 +75,21 @@ export function Navbar() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/5 py-4">
+          <div className="border-t py-4 md:hidden">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
+                const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm uppercase tracking-[0.3em] transition-colors ${
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-white/10 text-primary"
-                        : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
                     {link.label}
                   </Link>
                 );
@@ -108,4 +101,3 @@ export function Navbar() {
     </nav>
   );
 }
-

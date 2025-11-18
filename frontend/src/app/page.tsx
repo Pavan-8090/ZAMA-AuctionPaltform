@@ -8,31 +8,33 @@ import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { useWallet } from "@/hooks/useWallet";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Clock, Diamond, Flame, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Shield, Lock, CheckCircle2, TrendingUp, Users, Zap } from "lucide-react";
 import { usePublicClient, useReadContract } from "wagmi";
 import { AUCTION_ABI, AUCTION_ADDRESS } from "@/lib/contracts";
 import { AuctionStatus } from "@/types/auction";
 import { formatDistanceStrict } from "date-fns";
 import { targetChainId } from "@/lib/network";
 
-const featuredCollections = [
+const features = [
   {
-    title: "Quantum Bloom",
-    artist: "@aurora",
-    blurb: "Generative forms exploring encrypted motion and archival light.",
-    tag: "Reserve",
+    icon: Lock,
+    title: "Fully Homomorphic Encryption",
+    description: "Bids remain encrypted throughout the auction process, ensuring complete privacy and security.",
   },
   {
-    title: "Ciphered Echoes",
-    artist: "@noirwave",
-    blurb: "A study of secrecy and revelation in fully homomorphic space.",
-    tag: "Live Auction",
+    icon: Shield,
+    title: "Zero-Knowledge Verification",
+    description: "Prove bid validity without revealing bid amounts until reveal phase.",
   },
   {
-    title: "Spectral Rebuild",
-    artist: "@voidworks",
-    blurb: "Industrial palettes reconstructed through private liquidity.",
-    tag: "Edition of 5",
+    icon: CheckCircle2,
+    title: "Transparent Results",
+    description: "All auction outcomes are verifiable on-chain with complete transparency.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Enterprise Grade",
+    description: "Built for institutional and high-value auctions with robust security protocols.",
   },
 ];
 
@@ -106,14 +108,17 @@ export default function Home() {
       {
         label: "Total Auctions",
         value: totalAuctions ? Number(totalAuctions).toLocaleString() : "0",
+        icon: TrendingUp,
       },
       {
         label: "Active Auctions",
         value: liveAuctions.length.toString().padStart(2, "0"),
+        icon: Zap,
       },
       {
-        label: "Private Bids Sealed",
+        label: "Total Participants",
         value: `${Math.max(liveAuctions.length * 3, 12)}+`,
+        icon: Users,
       },
     ],
     [totalAuctions, liveAuctions.length]
@@ -128,253 +133,225 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-40 top-32 h-96 w-96 rounded-full bg-primary/20 blur-[140px]" />
-        <div className="absolute right-[-12rem] top-16 h-[28rem] w-[28rem] rounded-full bg-accent/20 blur-[160px]" />
-        <div className="absolute inset-x-0 bottom-[-12rem] h-[22rem] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(255,255,255,0.05),rgba(0,0,0,0))]" />
-      </div>
-
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 pb-32 pt-16">
-        <section className="grid items-start gap-16 lg:grid-cols-[1.25fr_1fr]">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-widest text-muted-foreground">
-              <span className="inline-flex h-2 w-2 rounded-full bg-primary"></span>
-              Live encrypted marketplace
-            </div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Collect encrypted art,
-              <br className="hidden sm:block" />
-              <span className="bg-gradient-to-r from-white via-white/80 to-white/40 bg-clip-text text-transparent">
-                reveal only when it counts.
-              </span>
-            </h1>
-            <p className="max-w-2xl text-lg text-muted-foreground">
-              EncryptedBidSecure is the private auction house for on-chain creators. Every bid is sealed
-              under fully homomorphic encryption—transparent results, invisible strategies.
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/auctions">
-                <Button className="group bg-primary text-primary-foreground hover:bg-primary/90">
-                  Explore Auctions
-                  <ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </Button>
-              </Link>
-              {mounted && isConnected ? (
-                <Link href="/create-auction">
-                  <Button
-                    variant="outline"
-                    className="border-white/20 bg-white/5 text-foreground hover:bg-white/10"
-                  >
-                    Launch Auction
+      <main>
+        {/* Hero Section */}
+        <section className="border-b bg-gradient-to-b from-background to-muted/20">
+          <div className="container mx-auto px-4 py-24 lg:py-32">
+            <div className="mx-auto max-w-4xl text-center">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-muted/50 px-4 py-2 text-sm">
+                <span className="h-2 w-2 rounded-full bg-primary"></span>
+                <span className="text-muted-foreground">Enterprise Encrypted Auction Platform</span>
+              </div>
+              <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                Secure Private Auctions
+                <br />
+                <span className="text-primary">Powered by FHE</span>
+              </h1>
+              <p className="mb-8 text-xl text-muted-foreground lg:text-2xl">
+                Conduct high-value auctions with complete bid privacy. Fully homomorphic encryption ensures
+                your bidding strategy remains confidential until reveal.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <Link href="/auctions">
+                  <Button size="lg" className="gap-2">
+                    Browse Auctions
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-              ) : (
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
+                {mounted && isConnected ? (
+                  <Link href="/create-auction">
+                    <Button size="lg" variant="outline" className="gap-2">
+                      Create Auction
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                ) : (
                   <WalletConnectButton />
-                </div>
-              )}
-              <div className="flex items-center gap-6 text-xs uppercase tracking-widest text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Zero knowledge reveal
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-2">
-                  <Diamond className="h-4 w-4 text-accent" />
-                  Curated drops
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative rounded-[2.5rem] border border-white/5 bg-card p-6 shadow-[0_0_120px_-40px_rgba(130,130,255,0.35)]">
-            <div className="absolute -top-6 left-6 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              Featured Lot
-            </div>
-            <div className="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-white/20 via-white/5 to-transparent">
-              <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(168,149,255,0.8),_rgba(15,15,35,0.9))]" />
-            </div>
-            <div className="mt-6 flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase text-muted-foreground">Encrypted reserve</p>
-                <p className="text-lg font-semibold">0xA1B...F92</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs uppercase text-muted-foreground">Ending in</p>
-                <p className="text-lg font-semibold">05h 18m</p>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mt-16 grid gap-3 rounded-[2rem] border border-white/5 bg-black/30 p-8 backdrop-blur">
-          <div className="grid gap-6 text-center sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="space-y-2">
-                <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{stat.label}</p>
-                <p className="text-3xl font-semibold">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-24 space-y-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Featured drops</p>
-              <h2 className="mt-2 text-2xl font-semibold">Curated encrypted works</h2>
-            </div>
-            <Link href="/auctions" className="text-sm text-muted-foreground hover:text-foreground">
-              View all
-            </Link>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {featuredCollections.map((item) => (
-              <Card
-                key={item.title}
-                className="group overflow-hidden border-white/5 bg-gradient-to-b from-white/5 via-transparent to-transparent transition-all hover:border-white/15"
-              >
-                <CardContent className="space-y-6 p-6">
-                  <div className="space-y-3">
-                    <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{item.tag}</span>
-                    <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{item.blurb}</p>
+        {/* Stats Section */}
+        <section className="border-b bg-muted/30 py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid gap-8 md:grid-cols-3">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="text-center">
+                    <div className="mb-4 flex justify-center">
+                      <div className="rounded-lg bg-primary/10 p-3">
+                        <Icon className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                    <p className="mb-2 text-4xl font-bold">{stat.value}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
                   </div>
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    <span>{item.artist}</span>
-                    <Link href="/auctions" className="inline-flex items-center gap-1 text-foreground">
-                      Explore <ArrowUpRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                );
+              })}
+            </div>
           </div>
         </section>
 
-        <section className="mt-24 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        {/* Features Section */}
+        <section className="py-24">
+          <div className="container mx-auto px-4">
+            <div className="mb-16 text-center">
+              <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                Enterprise-Grade Security
+              </h2>
+              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                Built for institutions and high-value auctions requiring the highest levels of privacy and
+                security.
+              </p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card key={feature.title} className="border">
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <div className="rounded-lg bg-primary/10 p-3 w-fit">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                      </div>
+                      <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Live Auctions Section */}
+        <section className="border-t bg-muted/20 py-24">
+          <div className="container mx-auto px-4">
+            <div className="mb-12 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Live auctions</p>
-                <h2 className="mt-2 text-2xl font-semibold">Streaming on-chain activity</h2>
+                <h2 className="mb-2 text-3xl font-bold tracking-tight">Live Auctions</h2>
+                <p className="text-muted-foreground">Active auctions currently accepting encrypted bids</p>
               </div>
-              <Link href="/auctions" className="text-sm text-muted-foreground hover:text-foreground">
-                Browse marketplace
+              <Link href="/auctions">
+                <Button variant="outline" className="gap-2">
+                  View All
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </Link>
             </div>
+
             <div className="space-y-4">
               {auctionLoading ? (
                 Array.from({ length: 3 }).map((_, idx) => (
-                  <div
-                    key={`skeleton-${idx}`}
-                    className="flex animate-pulse items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-6 py-4"
-                  >
-                    <div className="space-y-2">
-                      <div className="h-3 w-32 rounded-full bg-white/10" />
-                      <div className="h-5 w-48 rounded-full bg-white/10" />
-                    </div>
-                    <div className="flex items-center gap-8">
-                      <div className="h-4 w-20 rounded-full bg-white/10" />
-                      <div className="h-4 w-24 rounded-full bg-white/10" />
-                    </div>
-                  </div>
+                  <Card key={`skeleton-${idx}`} className="border">
+                    <CardContent className="p-6">
+                      <div className="flex animate-pulse items-center justify-between">
+                        <div className="space-y-2 flex-1">
+                          <div className="h-4 w-32 rounded bg-muted" />
+                          <div className="h-6 w-64 rounded bg-muted" />
+                        </div>
+                        <div className="flex items-center gap-8">
+                          <div className="h-4 w-24 rounded bg-muted" />
+                          <div className="h-10 w-24 rounded bg-muted" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))
               ) : liveAuctions.length > 0 ? (
                 liveAuctions.map((auction) => (
-                  <div
+                  <Card
                     key={auction.auctionId.toString()}
-                    className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 px-6 py-4 backdrop-blur transition-all hover:border-white/15 hover:bg-white/10"
+                    className="border transition-shadow hover:shadow-md"
                   >
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                        {auction.seller.slice(0, 6)}...{auction.seller.slice(-4)}
-                      </p>
-                      <p className="text-lg font-semibold">{auction.itemName}</p>
-                    </div>
-                    <div className="flex items-center gap-8 text-sm">
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4 text-primary" />
-                        {formatTimeRemaining(auction.endTime)}
-                      </span>
-                      <Link
-                        href={`/auction/${auction.auctionId.toString()}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-primary/10"
-                      >
-                        Enter
-                        <ArrowUpRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex-1">
+                          <p className="mb-1 text-sm font-medium text-muted-foreground">
+                            Seller: {auction.seller.slice(0, 6)}...{auction.seller.slice(-4)}
+                          </p>
+                          <h3 className="mb-2 text-xl font-semibold">{auction.itemName}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Reserve Price: {auction.reservePrice?.toString() || "N/A"} ETH
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span className="font-medium">{formatTimeRemaining(auction.endTime)}</span>
+                          </div>
+                          <Link href={`/auction/${auction.auctionId.toString()}`}>
+                            <Button variant="default" className="w-full sm:w-auto gap-2">
+                              View Auction
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))
               ) : (
-                <div className="flex items-center justify-between rounded-2xl border border-dashed border-white/10 bg-white/5 px-6 py-6 text-sm text-muted-foreground">
-                  <span>No live auctions yet. Be the first to list an encrypted piece.</span>
-                  <Link
-                    href="/create-auction"
-                    className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-primary/10"
-                  >
-                    List now
-                    <Flame className="h-3 w-3" />
-                  </Link>
-                </div>
+                <Card className="border-dashed">
+                  <CardContent className="p-12 text-center">
+                    <p className="mb-4 text-lg text-muted-foreground">
+                      No active auctions at this time.
+                    </p>
+                    {mounted && isConnected && (
+                      <Link href="/create-auction">
+                        <Button className="gap-2">
+                          Create First Auction
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                  </CardContent>
+                </Card>
               )}
             </div>
           </div>
-
-          <Card className="border-white/5 bg-gradient-to-br from-white/10 via-white/5 to-transparent">
-            <CardContent className="space-y-8 p-8">
-              <div className="space-y-3">
-                <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Newsletter</span>
-                <h3 className="text-2xl font-semibold">Weekly curation dispatch</h3>
-                <p className="text-sm text-muted-foreground">
-                  Receive encrypted auction theses and curator spotlights in your inbox.
-                </p>
-              </div>
-              <form className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="your@email"
-                  className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder:text-muted-foreground focus:border-white/30 focus:outline-none focus:ring-0"
-                />
-                <Button type="submit" className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  Subscribe
-                </Button>
-              </form>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-                Zero spam • Encrypted intel only
-              </p>
-            </CardContent>
-          </Card>
         </section>
 
-        <section className="mt-24">
-          <Card className="border-white/5 bg-white/5">
-            <CardContent className="space-y-6 p-8">
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Editorial spotlight
-              </p>
-              <h3 className="text-2xl font-semibold">
-                Private markets, public culture: a curator’s thesis on encrypted auctions
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                EncryptedBidSecure empowers creators to run silent auctions without sacrificing the
-                storytelling that collectors crave. Dive into weekly essays from curators covering privacy-as-performance,
-                sealed bid patronage, and collective reveals.
-              </p>
-              <Link
-                href="/auctions"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              >
-                Read the curation brief
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </CardContent>
-          </Card>
+        {/* CTA Section */}
+        <section className="border-t bg-primary/5 py-24">
+          <div className="container mx-auto px-4">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5">
+              <CardContent className="p-12 text-center">
+                <h2 className="mb-4 text-3xl font-bold tracking-tight">
+                  Ready to Launch Your Auction?
+                </h2>
+                <p className="mb-8 mx-auto max-w-2xl text-muted-foreground">
+                  Create a secure, encrypted auction in minutes. All bids remain private until the reveal
+                  phase, ensuring fair and transparent outcomes.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  {mounted && isConnected ? (
+                    <Link href="/create-auction">
+                      <Button size="lg" className="gap-2">
+                        Create Auction
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <WalletConnectButton />
+                  )}
+                  <Link href="/auctions">
+                    <Button size="lg" variant="outline" className="gap-2">
+                      Explore Marketplace
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
       </main>
 

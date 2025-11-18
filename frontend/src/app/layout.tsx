@@ -8,8 +8,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Encrypted Bidding Marketplace",
-  description: "Decentralized auction platform with encrypted bids",
+  title: "WhaleSafe - Enterprise Encrypted Auction Platform",
+  description: "Secure, private auction platform with fully homomorphic encryption. Enterprise-grade decentralized bidding marketplace.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={inter.className}>
         <ErrorBoundary>
           <Providers>
